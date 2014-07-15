@@ -4,6 +4,8 @@ from collections import defaultdict
 from itertools import izip_longest
 import locale
 import sys
+import re
+from abc import ABCMeta
 
 import dateutil.parser as parser
 
@@ -49,6 +51,34 @@ class CellType(object):
 
     def __repr__(self):
         return self.__class__.__name__.rsplit('Type', 1)[0]
+
+
+class RegExType(CellType):
+    __metaclass__ = ABCMeta
+
+    guessing_weight = 4
+    result_type = basestring
+    regex = '$^'  # match nothing by default
+
+    preprocessor = lambda self, s: s.strip()
+    null_values = ('', None)
+
+    def __str__(self):
+        return self.__class__.__name__
+
+    def __repr__(self):
+        return self.__str__()
+
+    def test(self, value):
+        value = self.preprocessor(value)
+
+        if value in self.null_values:
+            pass
+
+        if re.search(self.regex, value) is not None:
+            return True
+
+        return False
 
 
 class StringType(CellType):
