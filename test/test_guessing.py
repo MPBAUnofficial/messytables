@@ -8,7 +8,7 @@ from nose.tools import assert_equal
 from messytables import (CSVTableSet, type_guess, headers_guess,
                          offset_processor, DateType, StringType,
                          DecimalType, IntegerType,
-                         DateUtilType, BoolType, RegExType)
+                         DateUtilType, BoolType, RegExType, JsonType)
 
 
 class TypeGuessTest(unittest.TestCase):
@@ -50,6 +50,17 @@ class TypeGuessTest(unittest.TestCase):
             Type1(), Type2(), StringType()
         ])
 
+    def test_json_type(self):
+        csv_file = StringIO.StringIO('''
+        "{""a"":""b"", ""c"":""d""}",       "[1, 2, 3]",                12a
+        "[""a"", [1, 2, {""a"":""b""}]]",   "{""a"": 1, ""b"":[1, 2]}", abc
+        ,,                                                              "abc"
+        ''')
+
+        rows = CSVTableSet(csv_file).tables[0]
+        guessed_types = type_guess(rows.sample)
+
+        assert_equal(guessed_types, [JsonType(), JsonType(), StringType()])
 
     def test_type_guess_strict(self):
         import locale

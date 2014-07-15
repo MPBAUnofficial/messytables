@@ -4,6 +4,7 @@ from collections import defaultdict
 from itertools import izip_longest
 import locale
 import sys
+import json
 import re
 from abc import ABCMeta
 
@@ -223,7 +224,26 @@ class DateUtilType(CellType):
         return parser.parse(value)
 
 
-TYPES = [StringType, DecimalType, IntegerType, DateType, BoolType]
+class JsonType(CellType):
+    """ A JSON field. Root must be either an array or an object.
+    """
+    guessing_weight = 10
+    result_type = dict
+
+    def cast(self, value):
+        if value in ('', None):
+            return None
+
+        res = json.loads(value)
+
+        if isinstance(res, dict):
+            return res
+        if isinstance(res, list):
+            return dict(data=res)
+
+        raise ValueError
+
+TYPES = [StringType, DecimalType, IntegerType, DateType, BoolType, JsonType]
 
 
 def nullable_guess(rows, is_null=None, null_values=('', 'null', 'nil',
