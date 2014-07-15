@@ -86,6 +86,9 @@ class RegExType(CellType):
 
         return False
 
+    def cast(self, value):
+        return StringType().cast(value)  # no need to implement it again
+
 
 class StringType(CellType):
     """ A string or other unconverted type. """
