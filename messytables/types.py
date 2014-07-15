@@ -79,7 +79,7 @@ class RegExType(CellType):
         value = self.preprocessor(value)
 
         if value in self.null_values:
-            pass
+            return True
 
         if re.search(self.regex, value) is not None:
             return True
