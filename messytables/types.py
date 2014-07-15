@@ -54,6 +54,12 @@ class CellType(object):
 
 
 class RegExType(CellType):
+    """ A string that matches a defined regular expression.
+    This is an abstract class and must be subclassed in order to define the
+    actual type.
+    A preprocessor can be set in order to do some elaboration to the data
+    before testing the regex.
+    """
     __metaclass__ = ABCMeta
 
     guessing_weight = 4
