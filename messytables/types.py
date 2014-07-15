@@ -187,6 +187,37 @@ class DateUtilType(CellType):
 TYPES = [StringType, DecimalType, IntegerType, DateType, BoolType]
 
 
+def nullable_guess(rows, is_null=None, null_values=('', 'null', 'nil',
+                                                    'none', None)):
+    """ Guess whether a column can contain null values or not.
+    """
+    if is_null is None:
+        is_null = lambda v: \
+            (v is None) or (str(v).replace(' ', '').lower() in null_values)
+
+    guesses = []
+    for row in rows:
+        if len(guesses) == 0:  # initialize result list
+            guesses = [False for _ in row]
+
+        for i, col in enumerate(row):
+            if is_null(col.value):
+                guesses[i] = True
+
+    return guesses
+
+
+def nullable_processor(nullable_fields):
+    """ Apply a flag on fields which can contain null values.
+    """
+    def apply_nullable(row_set, row):
+        for cell, is_nullable in izip_longest(row, nullable_fields):
+            cell.nullable = is_nullable
+        return row
+
+    return apply_nullable
+
+
 def type_guess(rows, types=TYPES, strict=False):
     """ The type guesser aggregates the number of successful
     conversions of each column to each type, weights them by a
