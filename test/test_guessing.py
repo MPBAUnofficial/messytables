@@ -7,7 +7,7 @@ from nose.plugins.attrib import attr
 from nose.tools import assert_equal
 from messytables import (CSVTableSet, type_guess, headers_guess,
                          offset_processor, DateType, StringType,
-                         DecimalType, IntegerType,
+                         DecimalType, IntegerType, TimeType,
                          DateUtilType, BoolType, RegExType, JsonType)
 
 
@@ -15,18 +15,18 @@ class TypeGuessTest(unittest.TestCase):
     @attr("slow")
     def test_type_guess(self):
         csv_file = StringIO.StringIO('''
-            1,   2012/2/12, 2,   02 October 2011,  yes
-            2,   2012/2/12, 2,   02 October 2011,  true
-            2.4, 2012/2/12, 1,   1 May 2011,       no
-            foo, bar,       1000, ,                false
-            4.3, ,          42,  24 October 2012,
-             ,   2012/2/12, 21,  24 December 2013, true''')
+            1,   2012/2/12, 2,   02 October 2011,  yes,     11
+            2,   2012/2/12, 2,   02 October 2011,  true,    9 am
+            2.4, 2012/2/12, 1,   1 May 2011,       no,      23:00.123
+            foo, bar,       1000, ,                false,   12:00
+            4.3, ,          42,  24 October 2012,  ,        7.12
+             ,   2012/2/12, 21,  24 December 2013, true,    11PM ''')
         rows = CSVTableSet(csv_file).tables[0]
         guessed_types = type_guess(rows.sample)
 
         assert_equal(guessed_types, [
             DecimalType(), DateType('%Y/%m/%d'), IntegerType(),
-            DateType('%d %B %Y'), BoolType()])
+            DateType('%d %B %Y'), BoolType(), TimeType()])
 
     def test_regex_type(self):
         csv_file = StringIO.StringIO('''

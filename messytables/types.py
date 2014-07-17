@@ -6,6 +6,7 @@ import locale
 import sys
 import json
 import re
+from datetime import time
 from abc import ABCMeta
 
 import dateutil.parser as parser
@@ -224,6 +225,42 @@ class DateUtilType(CellType):
         return parser.parse(value)
 
 
+class TimeType(CellType):
+    guessing_weight = 5
+    result_type = time
+
+    def cast(self, value):
+        value = str(value).replace(' ', '').lower()
+
+        if value in ('', None):
+            return None
+
+        am = pm = False
+        h_offset = 0
+        if value.endswith('pm'):
+            h_offset = 12
+        value = value.replace('pm', '').replace('am', '')
+
+        separators = r'[\.:\s-]'
+        pattern = '^(?P<h>[01]?[0-9]|2[0-3]){0}(?P<m>[0-5][0-9])' \
+                  '({0}(?P<s>[0-5][0-9]))?(?(s)(\.(?P<ms>\d+))?)' \
+            .format(separators)
+
+        m = re.match(pattern, value)
+        if not m:
+            raise ValueError()
+
+        h = int(m.group('h'))
+        if (am or pm) and h > 12:
+            raise ValueError('That hour does not exist')
+        return time(
+            h + h_offset,
+            int(m.group('m')),
+            int(m.group('s') or 0),
+            int(m.group('ms') or 0)
+        )
+
+
 class JsonType(CellType):
     """ A JSON field. Root must be either an array or an object.
     """
@@ -243,7 +280,9 @@ class JsonType(CellType):
 
         raise ValueError
 
-TYPES = [StringType, DecimalType, IntegerType, DateType, BoolType, JsonType]
+TYPES = [
+    StringType, DecimalType, IntegerType, DateType, BoolType, JsonType, TimeType
+]
 
 
 def nullable_guess(rows, is_null=None, null_values=('', 'null', 'nil',
