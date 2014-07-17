@@ -78,6 +78,21 @@ class TypeGuessTest(unittest.TestCase):
             DecimalType(), IntegerType(), DateType('%d %B %Y'),
             DecimalType()])
 
+    def test_type_guess_forced(self):
+        csv_file = StringIO.StringIO('''
+            1,  aaa,    true
+            2,  bbb,    false
+            3,  ccc,
+            4,  ,       yes
+            5,  ddd,    no
+        ''')
+        rows = CSVTableSet(csv_file).tables[0]
+        guessed_types = type_guess(
+            rows.sample,
+            forced_types=[None, None, StringType()]
+        )
+        assert_equal(guessed_types, [IntegerType(), StringType(), StringType()])
+
     def test_strict_guessing_handles_padding(self):
         csv_file = StringIO.StringIO('''
             1,   , 2

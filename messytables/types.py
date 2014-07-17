@@ -316,7 +316,7 @@ def nullable_processor(nullable_fields):
     return apply_nullable
 
 
-def type_guess(rows, types=TYPES, strict=False):
+def type_guess(rows, types=TYPES, strict=False, forced_types=None):
     """ The type guesser aggregates the number of successful
     conversions of each column to each type, weights them by a
     fixed type priority and select the most probable type for
@@ -367,15 +367,23 @@ def type_guess(rows, types=TYPES, strict=False):
                 for type in type_instances:
                     if type.test(cell.value):
                         guesses[i][type] += type.guessing_weight
-        _columns = []
-    _columns = []
-    for guess in guesses:
+
+    _columns = [StringType() for _ in guesses]
+    if forced_types is not None:
+        assert len(forced_types) == len(guesses)
+        _columns = forced_types
+
+    for idx, guess in enumerate(guesses):
         # this first creates an array of tuples because we want the types to be
         # sorted. Even though it is not specified, python chooses the first
         # element in case of a tie
         # See: http://stackoverflow.com/a/6783101/214950
         guesses_tuples = [(t, guess[t]) for t in type_instances if t in guess]
-        _columns.append(max(guesses_tuples, key=lambda (t, n): n)[0])
+
+        if forced_types is not None and forced_types[idx] is not None:
+            continue
+
+        _columns[idx] = max(guesses_tuples, key=lambda (t, n): n)[0]
     return _columns
 
 
