@@ -81,6 +81,11 @@ def parse_wkb(value):
     :param value: (e)wkb or (e)wkt value to parse
     :return: parsed geometry
     """
+    value = value.strip(' \'\n"').lower()
+
+    if value == '':
+        return None
+
     if not is_hex(value):
         raise ValueError('Error: an hexadecimal string was expected.')
 
@@ -143,6 +148,9 @@ def parse_wkb(value):
 def parse_wkt(value):
     # clean the input value from quotes, double quotes etc.
     value = value.strip(' \'\n"').lower().replace('\n', '')
+
+    if value == '':
+        return None
 
     srid = -1
     if value.startswith('srid='):

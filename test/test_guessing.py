@@ -8,7 +8,8 @@ from nose.tools import assert_equal
 from messytables import (CSVTableSet, type_guess, headers_guess,
                          offset_processor, DateType, StringType,
                          DecimalType, IntegerType, TimeType,
-                         DateUtilType, BoolType, RegExType, JsonType)
+                         DateUtilType, BoolType, RegExType, JsonType,
+                         EWKB, EWKT)
 
 
 class TypeGuessTest(unittest.TestCase):
@@ -61,6 +62,19 @@ class TypeGuessTest(unittest.TestCase):
         guessed_types = type_guess(rows.sample)
 
         assert_equal(guessed_types, [JsonType(), JsonType(), StringType()])
+
+    def test_wkt_type(self):
+        csv_file = StringIO.StringIO('''
+        "0102000020e6100000020000000000000000002640000000000000474000000000000024400000000000804640",
+        "0102000020787f0000020000000000000000002640000000000000474000000000000024400000000000804640", "SRID=4326;LINESTRING(11 46,10 45)"
+        "0101000020e610000000000000000026400000000000004740", "SRID=4326;LINESTRING(11 46,10 45)"
+        , "SRID=4326;POINT(11 46)"
+        ''')
+
+        rows = CSVTableSet(csv_file).tables[0]
+        guessed_types = type_guess(rows.sample, strict=True)
+
+        assert_equal(guessed_types, [EWKB(), EWKT()])
 
     def test_type_guess_strict(self):
         import locale

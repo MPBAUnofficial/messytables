@@ -12,6 +12,7 @@ from abc import ABCMeta
 import dateutil.parser as parser
 
 from messytables.dateparser import DATE_FORMATS, is_date
+from messytables.wkbparser import Geometry, parse_wkt, parse_wkb
 
 
 class CellType(object):
@@ -280,8 +281,45 @@ class JsonType(CellType):
 
         raise ValueError
 
+
+class EWKT(CellType):
+    """ A Well Known Text (WKT) field, with support for PostGIS' Extended WKT.
+    More info about (E)WKT: https://en.wikipedia.org/wiki/Well-known_text
+    """
+    guessing_weight = 4
+    result_type = Geometry
+
+    def cast(self, value):
+        return parse_wkt(value)
+
+    def test(self, value):
+        try:
+            parse_wkt(value)
+            return True
+        except:
+            return False
+
+
+class EWKB(CellType):
+    """ A Well Known Binary (WKB) field, with support for PostGIS' Extended WKB.
+    """
+    guessing_weight = 4
+    result_type = Geometry
+
+    def cast(self, value):
+        return parse_wkb(value)
+
+    def test(self, value):
+        try:
+            parse_wkb(value)
+            return True
+        except:
+            return False
+
+
 TYPES = [
-    StringType, DecimalType, IntegerType, DateType, BoolType, JsonType, TimeType
+    StringType, DecimalType, IntegerType, DateType, BoolType, JsonType,
+    TimeType, EWKB, EWKT
 ]
 
 
